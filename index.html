@@ -1019,18 +1019,28 @@
                 
                 // Try to fetch real data if API keys are available
                 if (apiKeys.opensea || apiKeys.alchemy) {
-                    document.getElementById('loading-text').textContent = 'Fetching live data from OpenSea API...';
+                    document.getElementById('loading-text').textContent = 'Attempting to fetch live data from OpenSea...';
                     
                     try {
-                        collectionData = await fetchOpenSeaData(slug);
-                        isLiveData = true;
-                        console.log('Live data fetched:', collectionData);
+                        collectionData = await fetchOpenSeaDataWithFallback(slug);
+                        if (collectionData) {
+                            isLiveData = true;
+                            console.log('Live data fetched successfully:', collectionData);
+                        } else {
+                            throw new Error('No data returned from API');
+                        }
                     } catch (apiError) {
-                        console.warn('Live API failed, using fallback:', apiError);
+                        console.warn('API fetch failed:', apiError);
+                        document.getElementById('loading-text').textContent = 'API unavailable, using enhanced simulation...';
                         collectionData = getFallbackCollectionData(slug, collection);
                     }
                 } else {
-                    document.getElementById('loading-text').textContent = 'Using enhanced simulation data...';
+                    document.getElementById('loading-text').textContent = 'Using realistic simulation data...';
+                    collectionData = getFallbackCollectionData(slug, collection);
+                }
+                
+                // If we still don't have data, create fallback
+                if (!collectionData) {
                     collectionData = getFallbackCollectionData(slug, collection);
                 }
                 
